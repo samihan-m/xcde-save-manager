@@ -40,7 +40,8 @@ class Manager
 
         if (Directory.Exists(saveDirectory) == false)
         {
-            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not exist.");
+            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not exist. Press enter to exit.");
+            Console.ReadLine();
             return;
         }
 
@@ -48,7 +49,8 @@ class Manager
 
         if (Directory.Exists(GitDirectory) == false)
         {
-            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not contain a git repository. Initialize one before running this manager.");
+            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not contain a git repository. Initialize one before running this manager. Press enter to exit.");
+            Console.ReadLine();
             return;
         }
 
