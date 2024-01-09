@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
 	<SelfContained>true</SelfContained>
 	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>xcde.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,7 @@
     <None Remove="Styles.html" />
     <None Remove="XCDE Menu Background.png" />
     <None Remove="xcde-font.otf" />
+    <None Remove="xcde.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +43,12 @@
 	<Content Include="character-icons\\**\*.png">
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="xcde.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
