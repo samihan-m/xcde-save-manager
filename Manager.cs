@@ -9,8 +9,10 @@ class Manager
     {
         // Make sure Puppeteer has everything it needs downloaded off rip so it won't have to happen during a save or anything
         Console.WriteLine("Ensuring the HTML renderer has everything it needs downloaded...");
-        using var browserFetcher = new BrowserFetcher();
-        await browserFetcher.DownloadAsync();
+        using (var browserFetcher = new BrowserFetcher())
+        {
+            await browserFetcher.DownloadAsync();
+        }
         Console.WriteLine("Done.");
 
         // First argument might be the absolute path to the directory with all of the save files

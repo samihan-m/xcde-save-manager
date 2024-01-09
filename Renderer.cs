@@ -114,22 +114,24 @@ namespace xcde_save_manager
 
             async Task takeScreenshots(string[] htmlPath, string[] pngSavePath)
             {
-                using var browserFetcher = new BrowserFetcher();
-                await browserFetcher.DownloadAsync();
-                var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                using (var browserFetcher = new BrowserFetcher())
                 {
-                    Headless = true
-                });
-                var page = await browser.NewPageAsync();
-                await page.SetViewportAsync(new ViewPortOptions
-                {
-                    Width = 2560,
-                    Height = 1440
-                });
-                for(int i = 0; i < htmlPath.Length; i++)
-                {
-                    await page.GoToAsync(htmlPath[i]);
-                    await page.ScreenshotAsync(pngSavePath[i]);
+                    await browserFetcher.DownloadAsync();
+                    var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                    {
+                        Headless = true
+                    });
+                    var page = await browser.NewPageAsync();
+                    await page.SetViewportAsync(new ViewPortOptions
+                    {
+                        Width = 2560,
+                        Height = 1440
+                    });
+                    for (int i = 0; i < htmlPath.Length; i++)
+                    {
+                        await page.GoToAsync(htmlPath[i]);
+                        await page.ScreenshotAsync(pngSavePath[i]);
+                    }
                 }
             }
 
