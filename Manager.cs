@@ -27,7 +27,8 @@ class Manager
             string? path = Console.ReadLine();
             if (path == null)
             {
-                Console.WriteLine("Error: no path provided.");
+                Console.WriteLine("Error: no path provided. Exiting. Press any button to continue.");
+                Console.ReadLine();
                 return;
             }
             Console.WriteLine($"Using {path} as the save directory.");
