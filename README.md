@@ -17,3 +17,14 @@
  Maybe now that I have a reliable way to record saves from various points in the game (this manager and my repository) I'll be able to solve those mysteries. Maybe not. We'll see. If somebody else figures it out, let me know! I'd love to replace the "Not Yet Implemented" with the real chapter number. It would make things more informative.
 
 ## Do not look in the /character-icons folder if you don't want spoilers!
+
+## How it works
+
+In short,
+
+1. Watch for save file writes on the provided folder
+2. When a save file is written to, parse each save file to extract the information required for visualization
+3. Fill out HTML templates with the extracted information
+4. Render the HTML and take a screenshot of it
+5. Save the screenshots as PNGs and link them in the README
+6. Repeat
