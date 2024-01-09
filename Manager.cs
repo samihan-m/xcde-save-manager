@@ -8,37 +8,51 @@ class Manager
     public static async Task Main(string[] args)
     {
         // Make sure Puppeteer has everything it needs downloaded off rip so it won't have to happen during a save or anything
+        Console.WriteLine("Ensuring the HTML renderer has everything it needs downloaded...");
         using var browserFetcher = new BrowserFetcher();
         await browserFetcher.DownloadAsync();
+        Console.WriteLine("Done.");
 
-        // First argument will be the absolute path to the directory with all of the save files
+        // First argument might be the absolute path to the directory with all of the save files
+        string saveDirectory;
 
-        if (args.Length < 1)
+        if (args.Length >= 1)
+        {
+            saveDirectory = args[0];
+        }
+        else
         {
             Console.WriteLine("Error: expected the absolute path to the save directory as the first argument.");
-            return;
+            Console.WriteLine("What is the absolute path to the save directory? Type here:");
+            string? path = Console.ReadLine();
+            if (path == null)
+            {
+                Console.WriteLine("Error: no path provided.");
+                return;
+            }
+            Console.WriteLine($"Using {path} as the save directory.");
+            Console.WriteLine($"Consider creating a shortcut to this .exe with \"{path}\" as the first argument.");
+            saveDirectory = path;
         }
 
-        string SaveDirectory = args[0];
-
-        if (Directory.Exists(SaveDirectory) == false)
+        if (Directory.Exists(saveDirectory) == false)
         {
-            Console.WriteLine($"Error: The provided save directory `{SaveDirectory}` does not exist.");
+            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not exist.");
             return;
         }
 
-        string GitDirectory = Path.Combine(SaveDirectory, ".git");
+        string GitDirectory = Path.Combine(saveDirectory, ".git");
 
         if (Directory.Exists(GitDirectory) == false)
         {
-            Console.WriteLine($"Error: The provided save directory `{SaveDirectory}` does not contain a git repository. Initialize one before running this manager.");
+            Console.WriteLine($"Error: The provided save directory `{saveDirectory}` does not contain a git repository. Initialize one before running this manager.");
             return;
         }
 
         bool didFindRemoteRepo;
         using (PowerShell powershell = PowerShell.Create())
         {
-            powershell.AddScript($"cd \"{SaveDirectory}\"");
+            powershell.AddScript($"cd \"{saveDirectory}\"");
             powershell.AddScript("git remote -v");
 
             Collection<PSObject> results = powershell.Invoke();
@@ -53,13 +67,11 @@ class Manager
                 return;
             }
 
-            var x = powershell.Streams.Error.ToList();
-
             didFindRemoteRepo = results.Count > 0;
         }
         if (didFindRemoteRepo == false)
         {
-            Console.WriteLine($"Warning: The git repository in `{SaveDirectory}` does not have a remote repository set up. " +
+            Console.WriteLine($"Warning: The git repository in `{saveDirectory}` does not have a remote repository set up. " +
                 "Manager will not run `git push` after detecting changes. If this is a mistake, figure out your remote situation before running this manager.");
         }
 
@@ -67,7 +79,7 @@ class Manager
 
         Console.WriteLine("Performing initial check in...");
 
-        await checkInSaveData(SaveDirectory, didFindRemoteRepo);
+        await checkInSaveData(saveDirectory, didFindRemoteRepo);
 
         Console.WriteLine("Succeeded.");
 
@@ -77,20 +89,33 @@ class Manager
 
         Console.WriteLine("Initializing file watcher...");
 
-        using FileSystemWatcher watcher = new(SaveDirectory);
+        using FileSystemWatcher watcher = new(saveDirectory);
         watcher.Filter = "*.sav";
         watcher.NotifyFilter = NotifyFilters.LastWrite;
         watcher.EnableRaisingEvents = true;
 
-        Console.WriteLine($"Watching {SaveDirectory}.");
+        Console.WriteLine($"Watching {saveDirectory}.");
 
+        SemaphoreSlim renderSemaphore = new(1, 1);
+
+        // ISSUE: Because the watcher triggers multiple times for one file change, the checkIn will occur multiple times.
+        // This semaphore is a way of making sure that these multiple checkIn calls happen one at a time and don't cause any issues.
+        // Ideally, the watcher would only trigger once per file change. Something to look into.
         watcher.Changed += async (sender, e) =>
         {
             Console.WriteLine($"Detected change in {e.FullPath} - {File.GetLastAccessTime(e.FullPath).Ticks}");
             // Wait until the file is done being written to
             while (!IsFileReady(e.FullPath)) { }
             Console.WriteLine("File is ready.");
-            await checkInSaveData(SaveDirectory, didFindRemoteRepo);
+            await renderSemaphore.WaitAsync();
+            try
+            {
+                await checkInSaveData(saveDirectory, didFindRemoteRepo);
+            }
+            finally
+            {
+                renderSemaphore.Release();
+            }
         };
 
         while(true)
@@ -132,9 +157,17 @@ class Manager
 
         Console.WriteLine("Performing git commit...");
         PowerShellOutput commitOutput = commitChanges(absolutePath, $"Checking in save data - {DateTime.Now.ToString()}");
+        if(commitOutput.Output != null)
+        {
+            Console.WriteLine("Git commit output:");
+            foreach(PSObject output in commitOutput.Output)
+            {
+                Console.WriteLine(output.ToString());
+            }
+        }
         if(commitOutput.Errors != null)
         {
-            Console.WriteLine("Encountered error(s) when trying to commit:");
+            Console.WriteLine("Error output: (note: this includes non-normal messages for some reason)");
             foreach(ErrorRecord error in commitOutput.Errors)
             {
                 string errorMessage = error.ToString();
@@ -151,9 +184,17 @@ class Manager
         {
             Console.WriteLine("Performing git push...");
             pushOutput = pushCommits(absolutePath);
+            if (pushOutput.Output != null)
+            {
+                Console.WriteLine("Git push output:");
+                foreach (PSObject output in pushOutput.Output)
+                {
+                    Console.WriteLine(output.ToString());
+                }
+            }
             if (pushOutput.Errors != null)
             {
-                Console.WriteLine("Encountered error(s) when trying to push:");
+                Console.WriteLine("Error output: (note: this includes non-normal messages for some reason)");
                 for (int i = 0; i < pushOutput.Errors.Count; i++)
                 {
                     Console.WriteLine(pushOutput.Errors[i].ToString());
