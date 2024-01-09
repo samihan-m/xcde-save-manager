@@ -1,0 +1,149 @@
+<head>
+    <title>Virtual Save Screen Render</title>
+    <style>
+        @font-face {
+            font-family: "UDMarugo";
+            src: url("./xcde-font.otf");
+        }
+        body {
+            background-image: url("./XCDE Menu Background.png");
+            margin: 0;
+        }
+        * {
+            font-family: "UDMarugo";
+        }
+        .save-file-container {
+            display: flex;
+            flex-direction: column;
+            background-color: rgb(84, 84, 85);
+            margin-left: 22.75em;
+            margin-right: 22.75em;
+            padding-bottom: 1.5em;
+            border-radius: 10px;
+            width: 2000px;
+        }
+        .save-file {
+            display: grid;
+            grid-template-areas:
+                "thumbnail autosave autosave  autosave  empty playtime  ptimeval  ptimeval empty2 empty2"
+                "thumbnail level    leader    leader    empty savetime  stimeval  stimeval empty2 empty2"
+                "thumbnail level    leader    leader    empty storyprog sprogval  sprogval empty2 empty2"
+                "thumbnail footer   footer    footer    footer footer   footer    footer   footer empty3"
+                "thumbnail footer   footer    footer    footer footer   footer    footer   footer empty3";
+            background-color: rgb(232, 227, 217);
+            font-size: 145%;
+            width: 1796px;
+            /* I got this width from a screenshot of the game's save file select screen. */
+            border: 0.2em solid rgb(178, 164, 156);
+            border-radius: 8px;
+            margin: auto;
+            margin-top: 1em;
+            flex: 0 0 auto;
+        }
+        .autosave-file {
+            background-color: rgb(214, 204, 181);
+        }
+        .thumbnail {
+            grid-area: thumbnail;
+            padding: 0.5em;
+            margin-right: 1.5em;
+        }
+        .thumbnail > img {
+            border: 0.2em solid rgb(175, 167, 147);
+            border-radius: 8px;
+        }
+        .autosave {
+            grid-area: autosave;
+        }
+        .autosave-text {
+            font-size: 1em;
+            background-color: rgb(193, 142, 106);
+            color: white;
+            border-radius: 5em;
+            height: fit-content;
+            position: absolute;
+            margin-top: 0.65em;
+            width: 12.5em;
+            text-align: center;
+        }
+        .level {
+            grid-area: level;
+            font-size: 1.5em;
+            color: rgb(175,72,30);
+            margin-top: -0.35em;
+        }
+        .leader {
+            grid-area: leader;
+            font-size: 1.5em;
+            margin-top: -0.35em;
+        }
+        .playtime {
+            grid-area: playtime;
+            font-size: 1.25em;
+            color: rgb(178, 148, 118);
+        }
+        .ptimeval {
+            /* Play Time Value */
+            grid-area: ptimeval;
+            font-size: 1.25em;
+        }
+        .savetime {
+            grid-area: savetime;
+            font-size: 1.25em;
+            color: rgb(178, 148, 118);
+            margin-top: -1.15em;
+        }
+        .stimeval {
+            /* Save Time Value */
+            grid-area: stimeval;
+            font-size: 1.25em;
+            margin-top: -1.15em;
+        }
+        .storyprog {
+            grid-area: storyprog;
+            font-size: 1.25em;
+            color: rgb(178, 148, 118);
+            margin-top: -1.5em;
+        }
+        .sprogval {
+            /* Story Progress Value */
+            grid-area: sprogval;
+            font-size: 1.25em;
+            margin-top: -1.5em;
+        }
+        .footer {
+            grid-area: footer;
+            margin-top: -1.5em;
+        }
+        hr {
+            height: 2px;
+            border-top: 3px solid rgb(200, 193, 183);
+            border-bottom: 3px solid rgba(245, 239, 227, 0.5);
+        }
+        .footer-contents {
+            display: flex;
+            flex-direction: row;
+        }
+        .character-icon {
+            width: 85px;
+            height: 85px;
+            object-fit: none;
+            background-color: rgb(234, 231, 223);
+            border-radius: 10px;
+            margin-right: 0.5em;
+        }
+        .vertical-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="vertical-center">
+        <div class="save-file-container">
+            [BODY]
+        </div>
+    </div>
+</body>
