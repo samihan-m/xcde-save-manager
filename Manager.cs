@@ -25,7 +25,7 @@ class Manager
             Console.WriteLine("Error: expected the absolute path to the save directory as the first argument.");
             Console.WriteLine("What is the absolute path to the save directory? Type here:");
             string? path = Console.ReadLine();
-            if (path == null)
+            if (path == null || path == "")
             {
                 Console.WriteLine("Error: no path provided. Exiting. Press any button to continue.");
                 Console.ReadLine();
