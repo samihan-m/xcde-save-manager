@@ -5,6 +5,59 @@ namespace xcde_save_manager
 {
     internal class Renderer
     {
+        private static DateTime getSaveFileWriteTime(XCDESaveData save) {
+            byte[] saveFileBytes = save.ToRawData();
+            UInt16 bytes_containing_year = BitConverter.ToUInt16(saveFileBytes, 14);
+            // 0x1FA0 -> 0001 1111 1010 0000.
+            //           ^^^^^^^^^^^^^^^^^ these bits are the year
+            UInt16 year = bytes_containing_year >>= 2;
+
+
+            byte byte13 = saveFileBytes[13];
+            byte byte14 = saveFileBytes[14];
+            // 0xA0CB -> 1010 0000 1100 1011
+            //                  ^^ ^^ these bits are the month
+            //           ^^^^^^^^^ byte 14
+            //                     ^^^^^^^^^ byte 13
+            byte byte13Mask = 0b11000000;
+            byte byte14Mask = 0b00000011;
+            int month = (((byte13 & byte13Mask) >> 6) | ((byte14 & byte14Mask) << 2));
+
+            // TODO: Figure out what the rest of the bits in byte 13 are doing
+            //byte mystery_bits = (byte) (byte13 & (byte)~byte13Mask);
+            //Console.WriteLine("Mystery month-adjacent bits: {0}", Convert.ToString(mystery_bits, 2));
+            
+            byte byte12 = saveFileBytes[12];
+            // 0x3E -> 0011 1110
+            //         ^^^^^^^^^ byte 12
+            //            ^ ^^^^ these bits are the day
+            byte byte12Mask = 0b00011111;
+            int day = (byte12 & byte12Mask);
+
+            // TODO: Figure out what the rest of the bits in byte 12 are doing
+            //byte mystery_bits2 = (byte)(byte12 & (byte)~byte12Mask);
+            //Console.WriteLine("Mystery day-adjacent bits: {0}", Convert.ToString(mystery_bits2, 2));
+
+            byte byte11 = saveFileBytes[11];
+            byte byte10 = saveFileBytes[10];
+            // 0x0BBA -> 0000 1011 1011 1010
+            //           ^^^^^^^^^ byte 11
+            //                     ^^^^^^^^^ byte 10
+            //           ^^^^ these 4 bits % 6 * 240 minutes +
+            //                ^^ these 2 bits * 60 minutes +
+            //                  ^^ these 2 bits * 16 minutes +
+            //                     ^^^^ these 4 bits * 1 minute
+            int minutes = 
+                (byte11 >> 4) % 6 * 240 +
+                ((byte11 & 0b00001100) >> 2) * 60 +
+                ((byte11 & 0b00000011) * 16) +
+                (byte10 >> 4);
+
+            DateTime saveFileWriteTime = new(year, month, day, minutes / 60, minutes % 60, 0);
+            return saveFileWriteTime;
+        }
+
+
         public static async Task generateSaveScreenRender(string absolutePathToSaveDir)
         {
             // Keeping track of the HTML for the save files and the FC save files separately so we can render them separately
@@ -33,9 +86,9 @@ namespace xcde_save_manager
 
                 XCDESaveData saveData = new(saveFileData);
 
-                DateTime lastWriteTime = File.GetLastWriteTime(file);
-                string saveDate = lastWriteTime.ToString("MM/dd/yyyy");
-                string saveTime = lastWriteTime.ToString("HH:mm:ss"); // HH is for 24-hour time (instead of hh for 12-hour time)
+                DateTime saveFileWriteTime = getSaveFileWriteTime(saveData);
+                string saveDate = saveFileWriteTime.ToString("MM/dd/yyyy");
+                string saveTime = saveFileWriteTime.ToString("H:mm"); // H is for 24-hour time (instead of h for 12-hour time)
 
                 ulong playTimeInSeconds = BitConverter.ToUInt32(saveFileData, 4);
                 TimeSpan playTime = TimeSpan.FromSeconds(playTimeInSeconds);
