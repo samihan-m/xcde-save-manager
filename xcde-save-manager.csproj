@@ -14,9 +14,11 @@
   <ItemGroup>
     <None Remove="CharacterIcon.html" />
     <None Remove="SaveFile.html" />
+    <None Remove="FCSaveFile.html" />
     <None Remove="SaveScreen.html" />
     <None Remove="Styles.html" />
     <None Remove="XCDE Menu Background.png" />
+    <None Remove="FC Menu Background.png" />
     <None Remove="xcde-font.otf" />
     <None Remove="xcde.ico" />
   </ItemGroup>
@@ -28,6 +30,9 @@
     <Content Include="SaveFile.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="FCSaveFile.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="SaveScreen.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -35,6 +40,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="XCDE Menu Background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="FC Menu Background.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="xcde-font.otf">

@@ -134,7 +134,7 @@ class Manager
         }
     }
 
-    // From https://stackoverflow.com/a/1406853, thanks!
+    // From https://stackoverflow.com/a/1406853 - thanks!
     public static bool IsFileReady(string filename)
     {
         // If the file can be opened for exclusive access it means that the file
