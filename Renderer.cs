@@ -114,11 +114,11 @@ namespace xcde_save_manager
                 }
             }
 
-            async Task takeScreenshots(string[] htmlPath, string[] pngSavePath)
+            static async Task takeScreenshots(string[] htmlPath, string[] pngSavePath)
             {
                 using var browserFetcher = new BrowserFetcher();
                 await browserFetcher.DownloadAsync();
-                var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
                 {
                     Headless = true
                 });
