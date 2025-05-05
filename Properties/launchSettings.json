@@ -1,8 +1,7 @@
 {
   "profiles": {
     "xcde-save-manager": {
-      "commandName": "Project",
-      "commandLineArgs": "\"D:\\Samihan\\Documents\\My Games\\Yuzu Save Backups\\XCDE\\copied-save-Dec23-354AM\""
+      "commandName": "Project"
     }
   }
 }
