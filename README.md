@@ -3,9 +3,9 @@
  
  Once running, every time it detects an update to a `.sav` file in the chosen directory (as well as one guaranteed time on launch), the manager creates an  **almost completely accurate** `.png` visualization of what the Load Game screen would look like, places that visualization into the `README.md` of the repository, commits those changes, and (if remote has been set up for the repository) pushes those changes. You can see an example of it in action (me using it) at https://github.com/samihan-m/xcde-saves (DO NOT CLICK ON THIS IF YOU DO NOT WANT SPOILERS!). 
  
- I'm including a single visualization from very early in the game to prevent spoilers (note that this picture is from [v0.1.0](https://github.com/samihan-m/xcde-save-manager/releases/tag/v0.1.0) and looks a little different from [v0.1.1](https://github.com/samihan-m/xcde-save-manager/releases/tag/v0.1.1), which is a little more faithful to the real save select screen's rendering of save file write time):
+ I'm including a single visualization from very early in the game to prevent spoilers:
 
- ![saves](https://github.com/samihan-m/xcde-save-manager/assets/23440673/d95f253c-6942-4cdb-8c4f-7c62a405d4dc)
+![saves](https://github.com/user-attachments/assets/35797392-a03d-4474-bdb5-8b3f26ad767a)
 
 
  Big thanks to the work at https://gitlab.com/damysteryman/XCDESave, a library which I used for this project (as XCDESave.dll). 
