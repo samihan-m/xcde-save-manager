@@ -85,65 +85,27 @@ class Manager
         Console.WriteLine("Performing initial check in...");
 
         await checkInSaveData(saveDirectory, didFindRemoteRepo);
+        
+        DateTime lastDirectoryWriteTime = Directory.GetLastWriteTime(saveDirectory);
 
         Console.WriteLine("Succeeded.");
 
-        // Initialize a file watcher to watch for changes in the directory
-        // Specifically, changes to .tmb or .sav files (from what I can tell, if file1.sav is changed, file1.tmb is also changed)
-        // When changes are detected, run the image/README generation code, run a git commit, and then a git push
-
-        Console.WriteLine("Initializing file watcher...");
-
-        using FileSystemWatcher watcher = new(saveDirectory);
-        watcher.Filter = "*.sav";
-        watcher.NotifyFilter = NotifyFilters.LastWrite;
-        watcher.EnableRaisingEvents = true;
-
-        Console.WriteLine($"Watching {saveDirectory}.");
-
-        SemaphoreSlim renderSemaphore = new(1, 1);
-
-        // ISSUE: Because the watcher triggers multiple times for one file change, the checkIn will occur multiple times.
-        // This semaphore is a way of making sure that these multiple checkIn calls happen one at a time and don't cause any issues.
-        // Ideally, the watcher would only trigger once per file change. Something to look into.
-        async void onSaveHandler(object sender, FileSystemEventArgs e)
+        while (true)
         {
-            Console.WriteLine($"Detected change in {e.FullPath} - {File.GetLastAccessTime(e.FullPath).Ticks}");
-            // Wait until the file is done being written to
-            while (!IsFileReady(e.FullPath)) { }
-            Console.WriteLine("File is ready.");
-            await renderSemaphore.WaitAsync();
-            try
+            DateTime currentDirectoryWriteTime = Directory.GetLastWriteTime(saveDirectory);
+            IEnumerable<Task> tasks = [Task.Delay(1000)];
+            bool isChangeDetected = currentDirectoryWriteTime > lastDirectoryWriteTime;
+            if (isChangeDetected)
             {
-                await checkInSaveData(saveDirectory, didFindRemoteRepo);
+                Console.WriteLine($"Detected change in {saveDirectory}");
+                tasks = tasks.Append(checkInSaveData(saveDirectory, didFindRemoteRepo));
             }
-            finally
+            await Task.WhenAll(tasks);
+            // Checking in the save data will update the last write time,
+            // so update it post-check-in
+            if (isChangeDetected)
             {
-                renderSemaphore.Release();
-            }
-        }
-        watcher.Changed += onSaveHandler;
- 
-        string? parentDirectory = Path.GetDirectoryName(saveDirectory);
-        using FileSystemWatcher? directoryOverwriteWatcher = parentDirectory != null ? new FileSystemWatcher(parentDirectory) : null;
-        if (directoryOverwriteWatcher != null)
-        {
-            // In case the saves are updated by having the entire directory replaced,
-            // the main watcher will encounter an exception.
-            // This watcher, however, will not encounter that exception and will be able to detect the change.
-            Console.WriteLine($"Also watching {parentDirectory} for changes to the save directory.");
-            directoryOverwriteWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            directoryOverwriteWatcher.EnableRaisingEvents = true;
-            directoryOverwriteWatcher.Changed += onSaveHandler;
-        }
-
-        while(true)
-        {
-            Console.WriteLine("Type 'STOP' to stop.");
-            string? input = Console.ReadLine();
-            if(input != null && input == "STOP")
-            {
-                break;
+                lastDirectoryWriteTime = Directory.GetLastWriteTime(saveDirectory);
             }
         }
     }
@@ -170,6 +132,27 @@ class Manager
         string currentTimeString = DateTime.Now.ToString();
 
         Console.WriteLine($"Checking in save data at {currentTimeString}");
+
+        // When the save directory is overwritten (as via some save mechanisms)
+        // it is overwritten with an old version of the .git folder
+        // so we need to pull the latest git history
+        PowerShellOutput pullResponse = pullLatest(absolutePath);
+        if (pullResponse.Output != null)
+        {
+            Console.WriteLine("Git pull output:");
+            foreach (PSObject output in pullResponse.Output)
+            {
+                Console.WriteLine(output.ToString());
+            }
+        }
+        if (pullResponse.Errors != null)
+        {
+            Console.WriteLine("Error output: (note: this includes non-normal messages for some reason)");
+            foreach (ErrorRecord error in pullResponse.Errors)
+            {
+                Console.WriteLine(error.ToString());
+            }
+        }
 
         Console.WriteLine($"Creating HTML render of the save data...");
         while (Path.Exists(absolutePath) == false)
@@ -226,6 +209,27 @@ class Manager
         }
 
         return didCheckInSuccessfully;
+    }
+
+    private static PowerShellOutput pullLatest(string absolutePath)
+    {
+        using PowerShell powershell = PowerShell.Create();
+        // the folder PowerShell opens to by default is the user's home directory, so we need to cd
+        powershell.AddScript($"cd \"{absolutePath}\"");
+        // Stash the latest save
+        powershell.AddScript("git stash");
+        // Restore git history
+        powershell.AddScript("git pull");
+        // "Force" restore the stashed latest-save
+        powershell.AddScript("git checkout stash -- .");
+
+        Collection<PSObject> results = powershell.Invoke();
+
+        PowerShellOutput response = powershell.HadErrors == false ?
+            new(results.ToList(), null) :
+            new(null, powershell.Streams.Error.ToList());
+
+        return response;
     }
 
     private static PowerShellOutput commitChanges(string absolutePath, string commitMessage)
