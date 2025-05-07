@@ -29,6 +29,10 @@ namespace xcde_save_manager
 
                 string localBitmapPath = Path.GetFileNameWithoutExtension(file) + ".bmp";
 
+                while (File.Exists(file) == false)
+                {
+                    await Task.Delay(100);
+                }
                 byte[] saveFileData = File.ReadAllBytes(file);
                 bool isFutureConnectedSaveFile = Path.GetFileName(file).Contains("meria") == true;
 

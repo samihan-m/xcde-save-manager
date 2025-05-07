@@ -106,7 +106,7 @@ class Manager
         // ISSUE: Because the watcher triggers multiple times for one file change, the checkIn will occur multiple times.
         // This semaphore is a way of making sure that these multiple checkIn calls happen one at a time and don't cause any issues.
         // Ideally, the watcher would only trigger once per file change. Something to look into.
-        watcher.Changed += async (sender, e) =>
+        async void onSaveHandler(object sender, FileSystemEventArgs e)
         {
             Console.WriteLine($"Detected change in {e.FullPath} - {File.GetLastAccessTime(e.FullPath).Ticks}");
             // Wait until the file is done being written to
@@ -121,7 +121,21 @@ class Manager
             {
                 renderSemaphore.Release();
             }
-        };
+        }
+        watcher.Changed += onSaveHandler;
+ 
+        string? parentDirectory = Path.GetDirectoryName(saveDirectory);
+        using FileSystemWatcher? directoryOverwriteWatcher = parentDirectory != null ? new FileSystemWatcher(parentDirectory) : null;
+        if (directoryOverwriteWatcher != null)
+        {
+            // In case the saves are updated by having the entire directory replaced,
+            // the main watcher will encounter an exception.
+            // This watcher, however, will not encounter that exception and will be able to detect the change.
+            Console.WriteLine($"Also watching {parentDirectory} for changes to the save directory.");
+            directoryOverwriteWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            directoryOverwriteWatcher.EnableRaisingEvents = true;
+            directoryOverwriteWatcher.Changed += onSaveHandler;
+        }
 
         while(true)
         {
@@ -158,10 +172,14 @@ class Manager
         Console.WriteLine($"Checking in save data at {currentTimeString}");
 
         Console.WriteLine($"Creating HTML render of the save data...");
+        while (Path.Exists(absolutePath) == false)
+        {
+            await Task.Delay(100);
+        }
         await Renderer.generateSaveScreenRender(absolutePath);
 
         Console.WriteLine("Performing git commit...");
-        PowerShellOutput commitOutput = commitChanges(absolutePath, $"Checking in save data - {DateTime.Now.ToString()}");
+        PowerShellOutput commitOutput = commitChanges(absolutePath, $"Checking in save data - {DateTime.Now}");
         if(commitOutput.Output != null)
         {
             Console.WriteLine("Git commit output:");
