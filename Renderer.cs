@@ -14,14 +14,14 @@ namespace xcde_save_manager
             // Get all of the save files in the directory
             string[] saveFiles = Directory.GetFiles(absolutePathToSaveDir, "*.sav");
             // Sort saveFiles such that any files with 'a' at the end (autosaves) are at the beginning
-            saveFiles = [..saveFiles.OrderBy(file => !file.EndsWith("a.sav"))];
+            saveFiles = [.. saveFiles.OrderBy(file => !file.EndsWith("a.sav"))];
             // Exclude "bfssystem.sav" from the list of save files - this is a different kind of save file that tracks Game Settings and what's available in the Event Theater or something
-            saveFiles = [..saveFiles.Where(file => Path.GetFileName(file) != "bfssystem.sav")];
+            saveFiles = [.. saveFiles.Where(file => Path.GetFileName(file) != "bfssystem.sav")];
 
             foreach (string file in saveFiles)
             {
                 string thumbnailPath = Path.Combine(absolutePathToSaveDir, Path.GetFileNameWithoutExtension(file) + ".tmb");
-                if(File.Exists(thumbnailPath) == true)
+                if (File.Exists(thumbnailPath) == true)
                 {
                     XCDESaveThumbnail thumbnail = new(thumbnailPath);
                     thumbnail.Export(Path.Combine(Directory.GetCurrentDirectory(), Path.GetFileNameWithoutExtension(file) + ".bmp"), XCDESaveThumbnail.Type.BMP);
@@ -36,7 +36,7 @@ namespace xcde_save_manager
                 byte[] saveFileData = File.ReadAllBytes(file);
                 bool isFutureConnectedSaveFile = Path.GetFileName(file).Contains("meria") == true;
 
-                XCDESaveData saveData = new(saveFileData);             
+                XCDESaveData saveData = new(saveFileData);
 
                 DateTime saveFileWriteTime = Extractor.getSaveFileWriteTime(saveData);
                 string saveDate = saveFileWriteTime.ToString("MM/dd/yyyy");
@@ -44,7 +44,7 @@ namespace xcde_save_manager
 
                 ulong playTimeInSeconds = BitConverter.ToUInt32(saveFileData, 4);
                 TimeSpan playTime = TimeSpan.FromSeconds(playTimeInSeconds);
-                string playTimeString = $"{(24 * playTime.Days + playTime.Hours).ToString("00")}:{playTime.Minutes:00}";
+                string playTimeString = $"{24 * playTime.Days + playTime.Hours:00}:{playTime.Minutes:00}";
 
                 bool isAutosave = Path.GetFileNameWithoutExtension(file).EndsWith('a');
 
@@ -66,8 +66,8 @@ namespace xcde_save_manager
                     string name = saveData.Party.Characters[i].ToString();
 
                     // Trying not to spoil things :)
-                    int[] nameAsASCII = [..name.Select(c => (int)c)];
-                    if (nameAsASCII.SequenceEqual([70, 105, 111, 114, 97, 95, 50])) 
+                    int[] nameAsASCII = [.. name.Select(c => (int)c)];
+                    if (nameAsASCII.SequenceEqual([70, 105, 111, 114, 97, 95, 50]))
                     {
                         name = "Seven";
                     }
@@ -84,13 +84,13 @@ namespace xcde_save_manager
 
                 string characterIconTemplate = File.ReadAllText("./CharacterIcon.html");
                 string characterIconsHtml = "";
-                foreach(string name in partyMemberNames)
+                foreach (string name in partyMemberNames)
                 {
                     string iconHtml = characterIconTemplate.Replace("[CHARACTER_NAME]", name);
                     characterIconsHtml += iconHtml;
                 }
                 // Remove the trailing newline because Markdown's HTML rendering doesn't like when there's a newline before a closing tag
-                if(characterIconsHtml.EndsWith('\n'))
+                if (characterIconsHtml.EndsWith('\n'))
                 {
                     characterIconsHtml = characterIconsHtml.Remove(characterIconsHtml.Length - 1);
                 }
@@ -107,7 +107,7 @@ namespace xcde_save_manager
                     .Replace("[SAVE_TIME]", saveTime)
                     .Replace("[CHARACTER_ICONS]", characterIconsHtml);
 
-                if(isFutureConnectedSaveFile)
+                if (isFutureConnectedSaveFile)
                 {
                     fcSaveFilesHtml += saveFileHtml + "\n";
                 }
@@ -146,7 +146,7 @@ namespace xcde_save_manager
             string browserSafeSaveHtmlPath = new Uri(saveScreenHtmlSavePath).AbsolutePath;
             string[] pagesToScreenshot = [browserSafeSaveHtmlPath];
             string[] pngSavePaths = [pngSavePath];
-            
+
             string readmeText = $"![Save Screen Render](./saves.png)";
 
             if (fcSaveFilesHtml.Length != 0)
@@ -158,8 +158,8 @@ namespace xcde_save_manager
 
                 // Using a Uri AbsolutePath here so the path to the file is safe to be viewed in the browser
                 string browserSafeFcHtmlPath = new Uri(fcSaveScreenHtmlSavePath).AbsolutePath;
-                pagesToScreenshot = [..pagesToScreenshot.Append(browserSafeFcHtmlPath)];
-                pngSavePaths = [..pngSavePaths.Append(fcPngSavePath)];
+                pagesToScreenshot = [.. pagesToScreenshot.Append(browserSafeFcHtmlPath)];
+                pngSavePaths = [.. pngSavePaths.Append(fcPngSavePath)];
 
                 readmeText += $"\n![FC Save Screen Render](./fcsaves.png)";
             }

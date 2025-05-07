@@ -90,10 +90,10 @@ public class Extractor
     public static DateTime getSaveFileWriteTime(XCDESaveData save)
     {
         byte[] saveFileBytes = save.ToRawData();
-        UInt16 bytes_containing_year = BitConverter.ToUInt16(saveFileBytes, 14);
+        ushort bytes_containing_year = BitConverter.ToUInt16(saveFileBytes, 14);
         // 0x1FA0 -> 0001 1111 1010 0000.
         //           ^^^^^^^^^^^^^^^^^ these bits are the year
-        UInt16 year = bytes_containing_year >>= 2;
+        ushort year = bytes_containing_year >>= 2;
 
 
         byte byte13 = saveFileBytes[13];
@@ -104,7 +104,7 @@ public class Extractor
         //                     ^^^^^^^^^ byte 13
         byte byte13Mask = 0b11000000;
         byte byte14Mask = 0b00000011;
-        int month = (((byte13 & byte13Mask) >> 6) | ((byte14 & byte14Mask) << 2));
+        int month = ((byte13 & byte13Mask) >> 6) | ((byte14 & byte14Mask) << 2);
 
         // TODO: Figure out what the rest of the bits in byte 13 are doing
         //byte mystery_bits = (byte) (byte13 & (byte)~byte13Mask);
@@ -115,7 +115,7 @@ public class Extractor
         //         ^^^^^^^^^ byte 12
         //            ^ ^^^^ these bits are the day
         byte byte12Mask = 0b00011111;
-        int day = (byte12 & byte12Mask);
+        int day = byte12 & byte12Mask;
 
         // TODO: Figure out what the rest of the bits in byte 12 are doing
         //byte mystery_bits2 = (byte)(byte12 & (byte)~byte12Mask);

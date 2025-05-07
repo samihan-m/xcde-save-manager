@@ -85,7 +85,7 @@ class Manager
         Console.WriteLine("Performing initial check in...");
 
         await checkInSaveData(saveDirectory, didFindRemoteRepo);
-        
+
         DateTime lastDirectoryWriteTime = Directory.GetLastWriteTime(saveDirectory);
 
         Console.WriteLine("Succeeded.");
@@ -117,8 +117,8 @@ class Manager
         // is no longer locked by another process.
         try
         {
-            using (FileStream inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None))
-                return inputStream.Length > 0;
+            using FileStream inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None);
+            return inputStream.Length > 0;
         }
         catch (Exception)
         {
@@ -163,21 +163,21 @@ class Manager
 
         Console.WriteLine("Performing git commit...");
         PowerShellOutput commitOutput = commitChanges(absolutePath, $"Checking in save data - {DateTime.Now}");
-        if(commitOutput.Output != null)
+        if (commitOutput.Output != null)
         {
             Console.WriteLine("Git commit output:");
-            foreach(PSObject output in commitOutput.Output)
+            foreach (PSObject output in commitOutput.Output)
             {
                 Console.WriteLine(output.ToString());
             }
         }
-        if(commitOutput.Errors != null)
+        if (commitOutput.Errors != null)
         {
             Console.WriteLine("Error output: (note: this includes non-normal messages for some reason)");
-            foreach(ErrorRecord error in commitOutput.Errors)
+            foreach (ErrorRecord error in commitOutput.Errors)
             {
                 string errorMessage = error.ToString();
-                if(errorMessage.Contains("LF will be replaced by CRLF the next time Git touches it") == false)
+                if (errorMessage.Contains("LF will be replaced by CRLF the next time Git touches it") == false)
                 {
                     Console.WriteLine(errorMessage);
                 }
@@ -234,50 +234,40 @@ class Manager
 
     private static PowerShellOutput commitChanges(string absolutePath, string commitMessage)
     {
-        using (PowerShell powershell = PowerShell.Create())
-        {
-            // the folder PowerShell opens to by default is the user's home directory, so we need to cd
-            powershell.AddScript($"cd \"{absolutePath}\"");
-            powershell.AddScript("git add *");
-            powershell.AddScript($"git commit -m \"{commitMessage}\"");
+        using PowerShell powershell = PowerShell.Create();
+        // the folder PowerShell opens to by default is the user's home directory, so we need to cd
+        powershell.AddScript($"cd \"{absolutePath}\"");
+        powershell.AddScript("git add *");
+        powershell.AddScript($"git commit -m \"{commitMessage}\"");
 
-            Collection<PSObject> results = powershell.Invoke();
+        Collection<PSObject> results = powershell.Invoke();
 
-            PowerShellOutput response = powershell.HadErrors == false ?
-                new(results.ToList(), null) :
-                new(null, powershell.Streams.Error.ToList());
+        PowerShellOutput response = powershell.HadErrors == false ?
+            new(results.ToList(), null) :
+            new(null, powershell.Streams.Error.ToList());
 
-            return response;
-        }
+        return response;
     }
 
     private static PowerShellOutput pushCommits(string absolutePath)
     {
-        using (PowerShell powershell = PowerShell.Create())
-        {
-            // the folder PowerShell opens to by default is the user's home directory, so we need to cd
-            powershell.AddScript($"cd \"{absolutePath}\"");
-            powershell.AddScript("git push");
+        using PowerShell powershell = PowerShell.Create();
+        // the folder PowerShell opens to by default is the user's home directory, so we need to cd
+        powershell.AddScript($"cd \"{absolutePath}\"");
+        powershell.AddScript("git push");
 
-            Collection<PSObject> results = powershell.Invoke();
+        Collection<PSObject> results = powershell.Invoke();
 
-            PowerShellOutput response = powershell.HadErrors == false ?
-                new(results.ToList(), null) :
-                new(null, powershell.Streams.Error.ToList());
+        PowerShellOutput response = powershell.HadErrors == false ?
+            new(results.ToList(), null) :
+            new(null, powershell.Streams.Error.ToList());
 
-            return response;
-        }
+        return response;
     }
 }
 
-class PowerShellOutput
+class PowerShellOutput(List<PSObject>? output, List<ErrorRecord>? errors)
 {
-    public List<PSObject>? Output { get; set; }
-    public List<ErrorRecord>? Errors { get; set; }
-
-    public PowerShellOutput(List<PSObject>? output, List<ErrorRecord>? errors)
-    {
-        Output = output;
-        Errors = errors;
-    }
+    public List<PSObject>? Output { get; set; } = output;
+    public List<ErrorRecord>? Errors { get; set; } = errors;
 }
